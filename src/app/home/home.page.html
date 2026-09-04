@@ -314,8 +314,9 @@
 }
 
   @if (vistaActual() === 'graficos') {
-    <app-graficos #graficos [restaurantes]="restaurantesFiltrados()"></app-graficos>
-    <!-- #graficos permite leer sus gráficas ya dibujadas desde generarInformePDF() -->
+    <!-- Este componente solo representa la pantalla. La exportación al PDF se
+         realiza en GraficosInformeService y no depende de este segmento. -->
+    <app-graficos [restaurantes]="restaurantesFiltrados()"></app-graficos>
   }
 
 </ion-content>

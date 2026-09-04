@@ -1,3 +1,18 @@
+
+
+
+/** NO SE UTILIZA YA QUE HACEMOS USO DE TYPESCRIPT, CON JS SIMPLIFICARÍA LA EJECUCIÓN, PERO COMPLICARÍA EL APRENDIZAJE. **/
+
+
+
+
+
+
+
+
+
+
+
 // *****************************************************************************
 // SERVIDOR DE INFORMES — Express + Puppeteer
 //
@@ -50,14 +65,42 @@ app.post('/api/informe', async (req, res) => {
     // ya están aplicados antes de imprimir el PDF.
     await page.setContent(html, { waitUntil: 'networkidle0' });
 
-    const pdfBuffer = await page.pdf({
+    // page.pdf() imprime el HTML cargado con setContent. Los márgenes superior
+    // e inferior reservan espacio para las plantillas que Chromium dibuja en
+    // todas las páginas, fuera del contenido principal del informe.
+    const pdfData = await page.pdf({
       format: 'A4',
       printBackground: true,
-      margin: { top: '15mm', bottom: '15mm', left: '10mm', right: '10mm' },
+      displayHeaderFooter: true,
+      margin: { top: '28mm', bottom: '22mm', left: '12mm', right: '12mm' },
+      // headerTemplate y footerTemplate no heredan el CSS del HTML recibido:
+      // por eso cada uno incluye sus estilos en línea.
+      headerTemplate: `
+        <div style="box-sizing: border-box; width: 100%; padding: 0 12mm; font-family: Arial, sans-serif; color: #1e293b;">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 5px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="display: inline-block; width: 20px; height: 20px; border-radius: 4px; background: #2563eb; color: #ffffff; font-size: 13px; font-weight: bold; line-height: 20px; text-align: center;">G</span>
+              <span style="font-size: 11px; font-weight: bold; letter-spacing: 0.5px;">GUIA DE RESTAURANTES EUSKADI</span>
+            </div>
+            <span style="font-size: 8px; color: #64748b;">INFORME DE RESULTADOS</span>
+          </div>
+        </div>
+      `,
+      footerTemplate: `
+        <div style="box-sizing: border-box; width: 100%; padding: 0 12mm; font-family: Arial, sans-serif; font-size: 8px; color: #64748b;">
+          <div style="border-top: 1px solid #cbd5e1; padding-top: 5px;">
+            <span>Guia de Restaurantes Euskadi · Documento generado automaticamente</span>
+            <!-- pageNumber y totalPages son valores que Chromium sustituye al imprimir. -->
+            <span style="float: right; color: #1e3a5f; font-weight: bold;">Pagina <span class="pageNumber"></span> de <span class="totalPages"></span></span>
+          </div>
+        </div>
+      `,
     });
 
+    // Puppeteer devuelve un Uint8Array. Convertirlo a Buffer evita que Express
+    // lo serialice como JSON y garantiza una descarga PDF válida.
     res.set('Content-Type', 'application/pdf');
-    res.send(pdfBuffer);
+    res.send(Buffer.from(pdfData));
   } catch (err) {
     console.error('Error generando el PDF:', err);
     res.status(500).json({ error: 'No se pudo generar el informe.' });
