@@ -143,6 +143,22 @@ export class GraficosComponent implements OnDestroy {
   }
 
   // *************************************************************************
+  // obtenerImagenes — exporta las gráficas actuales como PNG en base64
+  //
+  // chart.toBase64Image() lee directamente el <canvas> ya dibujado y lo
+  // convierte a un data URL. Esto es lo que se inyecta como <img> en el HTML
+  // que se envía al backend, porque Puppeteer no ejecuta Chart.js: solo
+  // renderiza el HTML/CSS/imágenes que le pasamos.
+  // *************************************************************************
+  obtenerImagenes(): Record<string, string> {
+    const imagenes: Record<string, string> = {};
+    this.charts.forEach((chart, key) => {
+      imagenes[key] = chart.toBase64Image();
+    });
+    return imagenes;
+  }
+
+  // *************************************************************************
   // GRÁFICO 1 — Barras verticales: restaurantes por territorio
   //
   // TIPO: 'bar' (barras verticales por defecto)

@@ -1,6 +1,9 @@
 
 export const environment = {
   production: false,
+  // URL del backend Express+Puppeteer (carpeta /server). En emulador Android
+  // usa http://10.0.2.2:3000 en vez de localhost.
+  informesApiUrl: 'http://localhost:3000',
   auth: {
     email: 'mardanza@birt.eus',
     password: 'Test1234',

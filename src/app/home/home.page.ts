@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // IMPORTS — Angular core
 // ─────────────────────────────────────────────────────────────────────────────
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, viewChild } from '@angular/core';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // IMPORTS — Ionic: módulo de componentes UI y controladores de overlays
@@ -19,7 +19,7 @@ import {
   closeCircleOutline, searchOutline, filterOutline, trashOutline,
   globeOutline, warningOutline, informationCircleOutline,
   downloadOutline, lockClosedOutline, addOutline, arrowUpOutline, arrowDownOutline,
-  barChartOutline, listOutline
+  barChartOutline, listOutline, documentTextOutline
 } from 'ionicons/icons';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -27,6 +27,7 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 import { Restaurante } from '../interface/restaurante';
 import { RestauranteService } from '../services/restaurante.service';
+import { InformeService } from '../services/informe.service';
 import { AddRestauranteModalComponent } from '../components/add-restaurante-modal/add-restaurante-modal.component';
 import { GraficosComponent } from '../components/graficos/graficos.component';
 import restaurantesJSON from '../../assets/datos/restaurantes.json';
@@ -46,6 +47,7 @@ export class HomePage {
   // Es equivalente a declararlos como parámetros en el constructor.
   // ─────────────────────────────────────────────────────────────────────────
   restauranteService = inject(RestauranteService);
+  informeService     = inject(InformeService);
   alertCtrl          = inject(AlertController);
   toastCtrl          = inject(ToastController);
   loadingCtrl        = inject(LoadingController);
@@ -95,6 +97,12 @@ export class HomePage {
   /** Vista activa del segment: tabla o gráficos */
   vistaActual = signal<'tabla' | 'graficos'>('tabla');
 
+  /** H1: bloquea el botón mientras se genera el informe PDF en el backend */
+  generandoInforme = signal(false);
+
+  /** Referencia al componente de gráficas para leer sus imágenes ya dibujadas */
+  private graficos = viewChild<GraficosComponent>('graficos');
+
   // ─────────────────────────────────────────────────────────────────────────
   // CONSTRUCTOR
   // Se ejecuta al instanciar el componente.
@@ -106,7 +114,7 @@ export class HomePage {
       closeCircleOutline, searchOutline, filterOutline, trashOutline,
       globeOutline, warningOutline, informationCircleOutline,
       downloadOutline, lockClosedOutline, addOutline, arrowUpOutline, arrowDownOutline,
-      barChartOutline, listOutline
+      barChartOutline, listOutline, documentTextOutline
     });
   }
 
@@ -344,6 +352,24 @@ export class HomePage {
     a.href = url;
     a.download = 'restaurantes_backup.json';
     a.click();
+  }
+
+  /**
+   * Genera el informe PDF: recoge las gráficas ya dibujadas como imágenes
+   * (toBase64Image) y se las manda junto a la tabla al backend Puppeteer,
+   * que devuelve el PDF listo para descargar.
+   */
+  async generarInformePDF() {
+    this.generandoInforme.set(true);
+    try {
+      const imagenes = this.graficos()?.obtenerImagenes() ?? {};
+      await this.informeService.generarInformePDF(this.restaurantesFiltrados(), imagenes);
+      await this.mostrarToast('Informe generado correctamente.', 'success');
+    } catch {
+      await this.mostrarToast('No se pudo generar el informe. ¿Está el servidor de informes en marcha?', 'danger');
+    } finally {
+      this.generandoInforme.set(false);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────

@@ -37,6 +37,13 @@
         <ion-icon slot="start" name="download-outline"></ion-icon>
         Exportar
       </ion-button>
+      <ion-button
+        (click)="generarInformePDF()"
+        [disabled]="cargando() || importando() || generandoInforme()"
+        title="Generar informe PDF con tabla y gráficas">
+        <ion-icon slot="start" name="document-text-outline"></ion-icon>
+        Informe PDF
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -307,7 +314,8 @@
 }
 
   @if (vistaActual() === 'graficos') {
-    <app-graficos [restaurantes]="restaurantesFiltrados()"></app-graficos>
+    <app-graficos #graficos [restaurantes]="restaurantesFiltrados()"></app-graficos>
+    <!-- #graficos permite leer sus gráficas ya dibujadas desde generarInformePDF() -->
   }
 
 </ion-content>
