@@ -25,10 +25,9 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 // IMPORTS — Interfaz, servicio y datos locales del proyecto
 // ─────────────────────────────────────────────────────────────────────────────
+import { RouterLink } from '@angular/router';
 import { Restaurante } from '../interface/restaurante';
 import { RestauranteService } from '../services/restaurante.service';
-import { InformeService } from '../services/informe.service';
-import { GraficosInformeService } from '../services/graficos-informe.service';
 import { AddRestauranteModalComponent } from '../components/add-restaurante-modal/add-restaurante-modal.component';
 import { GraficosComponent } from '../components/graficos/graficos.component';
 import restaurantesJSON from '../../assets/datos/restaurantes.json';
@@ -36,7 +35,7 @@ import restaurantesJSON from '../../assets/datos/restaurantes.json';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [IonicModule, GraficosComponent],
+  imports: [IonicModule, GraficosComponent, RouterLink],
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss']
 })
@@ -48,9 +47,6 @@ export class HomePage {
   // Es equivalente a declararlos como parámetros en el constructor.
   // ─────────────────────────────────────────────────────────────────────────
   restauranteService = inject(RestauranteService);
-  informeService     = inject(InformeService);
-  // Genera imágenes para el PDF con canvas temporales; no controla la vista.
-  graficosInformeService = inject(GraficosInformeService);
   alertCtrl          = inject(AlertController);
   toastCtrl          = inject(ToastController);
   loadingCtrl        = inject(LoadingController);
@@ -99,9 +95,6 @@ export class HomePage {
 
   /** Vista activa del segment: tabla o gráficos */
   vistaActual = signal<'tabla' | 'graficos'>('tabla');
-
-  /** H1: bloquea el botón mientras se genera el informe PDF en el backend */
-  generandoInforme = signal(false);
 
   // ─────────────────────────────────────────────────────────────────────────
   // CONSTRUCTOR
@@ -352,33 +345,6 @@ export class HomePage {
     a.href = url;
     a.download = 'restaurantes_backup.json';
     a.click();
-  }
-
-  /**
-   * Genera el informe PDF sin depender del ion-segment activo:
-   * 1. Crea imágenes temporales de las gráficas con los datos filtrados.
-   * 2. Envía tabla, imágenes y filtros al servicio de informe.
-   * 3. El servicio llama al backend Puppeteer y descarga el PDF recibido.
-   */
-  async generarInformePDF() {
-    this.generandoInforme.set(true);
-    try {
-      // El servicio crea canvas temporales para exportar las gráficas. Así el
-      // informe no depende de que el segmento "Gráficos" esté abierto.
-      const imagenes = this.graficosInformeService.obtenerImagenes(this.restaurantesFiltrados());
-      // Se envían los valores de los filtros, no solo la lista resultante, para
-      // que el documento indique claramente los criterios usados.
-      await this.informeService.generarInformePDF(this.restaurantesFiltrados(), imagenes, {
-        busqueda: this.textoBusqueda().trim(),
-        territorios: this.territoriosSeleccionados(),
-        localidades: this.localidadesSeleccionadas(),
-      });
-      await this.mostrarToast('Informe generado correctamente.', 'success');
-    } catch {
-      await this.mostrarToast('No se pudo generar el informe. ¿Está el servidor de informes en marcha?', 'danger');
-    } finally {
-      this.generandoInforme.set(false);
-    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────

@@ -1,0 +1,42 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Probar servidor</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-item>
+    <ion-label position="stacked">Mensaje a enviar</ion-label>
+    <ion-input
+      [value]="mensaje()"
+      (ionInput)="mensaje.set($any($event.target).value)"
+      placeholder="Escribe algo, por ejemplo: Hola servidor">
+    </ion-input>
+  </ion-item>
+
+  <ion-button expand="block" class="ion-margin-top"
+    (click)="enviarMensaje()"
+    [disabled]="enviando() || !mensaje().trim()">
+    Enviar al servidor
+  </ion-button>
+
+  @if (respuesta()) {
+    <ion-item lines="none" color="success" class="ion-margin-top" style="border-radius: 8px;">
+      <ion-label class="ion-text-wrap">
+        {{ respuesta() }}
+        @if (recibidoEn()) {
+          <p>Recibido en el servidor: {{ recibidoEn() | date:'medium' }}</p>
+        }
+      </ion-label>
+    </ion-item>
+  }
+
+  @if (error()) {
+    <ion-item lines="none" color="danger" class="ion-margin-top" style="border-radius: 8px;">
+      <ion-label class="ion-text-wrap">{{ error() }}</ion-label>
+    </ion-item>
+  }
+</ion-content>

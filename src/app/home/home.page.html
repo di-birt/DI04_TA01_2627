@@ -38,11 +38,10 @@
         Exportar
       </ion-button>
       <ion-button
-        (click)="generarInformePDF()"
-        [disabled]="cargando() || importando() || generandoInforme()"
-        title="Generar informe PDF con tabla y gráficas">
+        routerLink="/prueba-servidor"
+        title="Probar la conexión con el servidor">
         <ion-icon slot="start" name="document-text-outline"></ion-icon>
-        Informe PDF
+        Probar servidor
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -314,8 +313,6 @@
 }
 
   @if (vistaActual() === 'graficos') {
-    <!-- Este componente solo representa la pantalla. La exportación al PDF se
-         realiza en GraficosInformeService y no depende de este segmento. -->
     <app-graficos [restaurantes]="restaurantesFiltrados()"></app-graficos>
   }
 
